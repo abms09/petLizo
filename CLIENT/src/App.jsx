@@ -50,7 +50,7 @@ import Chat from "../components/Chat";
 
 function AppWrapper() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/petLizo">
       <App />
     </BrowserRouter>
   );
