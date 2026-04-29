@@ -77,11 +77,11 @@ export default function SellerRequests() {
   };
 
   const openChat = (req) => {
+    localStorage.setItem("chatSellerId", req.buyer._id);
+
     navigate("/chat", {
       state: {
-        userId: req.buyer._id,
-        sellerId: req.seller,
-        petId: req.pet._id,
+        sellerId: req.buyer._id,
       },
     });
   };

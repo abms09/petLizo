@@ -102,11 +102,11 @@ export default function UserRequests() {
   };
 
   const openChat = (req) => {
+    localStorage.setItem("chatSellerId", req.seller._id);
+
     navigate("/chat", {
       state: {
-        userId: req.user || req.userId,
         sellerId: req.seller._id,
-        petId: req.pet._id,
       },
     });
   };

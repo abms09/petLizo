@@ -47,6 +47,7 @@ import PetDetails from "../pages/user/PetDetails";
 import UserRequests from "../pages/user/Requests";
 import UserProfile from "../pages/user/UserProfile";
 import Chat from "../components/Chat";
+import Wishlist from "../pages/user/WishList";
 
 function AppWrapper() {
   return (
@@ -154,6 +155,7 @@ function App() {
           <Route path="/become-seller" element={<BecomeSeller />} />
           <Route path="/requests" element={<UserRequests />} />
           <Route path="/userProfile" element={<UserProfile />} />
+          <Route path="/wishlist" element={<Wishlist />} />
         </Route>
       </Routes>
 

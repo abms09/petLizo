@@ -1,29 +1,63 @@
 import { useEffect, useRef, useState } from "react";
-import { socket } from "../src/socket";
+import { getSocket } from "../src/socket";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 
 export default function Chat() {
   const location = useLocation();
   const { state } = location || {};
+
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?.id || user?._id;
-  const sellerId = state?.sellerId || localStorage.getItem("chatSellerId");
-  const roomId =userId && sellerId ? [userId, sellerId].sort().join("_") : null;
-  
+  const sellerId = state?.sellerId;
+
+  const roomId =
+    userId && sellerId && userId !== sellerId
+      ? [userId, sellerId].sort().join("_")
+      : null;
+
+  console.log("USER:", userId);
+  console.log("SELLER:", sellerId);
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (!roomId) return;
+    socketRef.current = getSocket();
+
+    if (!socketRef.current.connected) {
+      socketRef.current.connect();
+    }
+
+    console.log("🔌 Socket initialized");
+  }, []);
+
+  useEffect(() => {
+    if (!roomId || !socketRef.current) return;
+
+    const socket = socketRef.current;
+
     socket.emit("join_room", roomId);
+
+    const handleMessage = (data) => {
+      console.log("📩 Received:", data);
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socket.off("receive_message");
+    socket.on("receive_message", handleMessage);
+
+    return () => {
+      socket.off("receive_message", handleMessage);
+    };
   }, [roomId]);
 
   useEffect(() => {
@@ -50,16 +84,6 @@ export default function Chat() {
   }, [roomId]);
 
   useEffect(() => {
-    const handleMessage = (data) => {
-      setMessages((prev) => [...prev, data]);
-    };
-
-    socket.on("receive_message", handleMessage);
-
-    return () => socket.off("receive_message", handleMessage);
-  }, []);
-
-  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -67,19 +91,23 @@ export default function Chat() {
     if (!message.trim()) return;
 
     if (!userId || !sellerId) {
-      console.error("❌ Missing IDs", { userId, sellerId });
+      console.error("Missing IDs", { userId, sellerId });
       return;
     }
 
-    socket.emit("send_message", {
+    const msgData = {
       senderId: userId,
       receiverId: sellerId,
       message,
-    });
+    };
+
+    socketRef.current.emit("send_message", msgData);
 
     setMessage("");
   };
-
+  if (!roomId) {
+    return <p className="text-center mt-10">Invalid chat</p>;
+  }
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <div className="bg-white shadow p-4 text-center font-semibold">
@@ -110,13 +138,7 @@ export default function Chat() {
                 >
                   <p>{msg.message}</p>
 
-                  <div
-                    className={`text-[10px] mt-1 ${
-                      isMine
-                        ? "text-blue-100 text-right"
-                        : "text-gray-500 text-right"
-                    }`}
-                  >
+                  <div className="text-[10px] mt-1 text-right opacity-70">
                     {msg.createdAt
                       ? new Date(msg.createdAt).toLocaleTimeString([], {
                           hour: "2-digit",
@@ -125,13 +147,7 @@ export default function Chat() {
                       : ""}
                   </div>
 
-                  <div
-                    className={`text-[10px] mt-1 ${
-                      isMine
-                        ? "text-blue-100 text-right"
-                        : "text-gray-500 text-right"
-                    }`}
-                  >
+                  <div className="text-[10px] text-right opacity-70">
                     {isMine ? "You" : "Seller"}
                   </div>
                 </div>

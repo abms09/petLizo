@@ -21,31 +21,20 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  }),
+  })
 );
 
-const authRoutes = require("./routes/authRoutes");
-const sellerRoutes = require("./routes/sellerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const petRoutes = require("./routes/petRoutes");
-const contactRoutes = require("./routes/contactRoutes");
-const userRoutes = require("./routes/userRoutes");
-const requestRoutes = require("./routes/requestRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const chatRoutes = require("./routes/chatRoutes");
+app.use("/auth", require("./routes/authRoutes"));
+app.use("/seller", require("./routes/sellerRoutes"));
+app.use("/admin", require("./routes/adminRoutes"));
+app.use("/pets", require("./routes/petRoutes"));
+app.use("/contact", require("./routes/contactRoutes"));
+app.use("/user", require("./routes/userRoutes"));
+app.use("/request", require("./routes/requestRoutes"));
+app.use("/notification", require("./routes/notificationRoutes"));
+app.use("/chat", require("./routes/chatRoutes"));
 
-app.use("/auth", authRoutes);
-app.use("/seller", sellerRoutes);
-app.use("/admin", adminRoutes);
-app.use("/pets", petRoutes);
-app.use("/contact", contactRoutes);
-app.use("/user", userRoutes);
-app.use("/request", requestRoutes);
-app.use("/notification", notificationRoutes);
-app.use("/chat", chatRoutes);
-
-const errorHandler = require("./middleware/errorHandler");
-app.use(errorHandler);
+app.use(require("./middleware/errorHandler"));
 
 const server = http.createServer(app);
 
@@ -61,17 +50,26 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("join_room", (roomId) => {
+    if (!roomId) return;
+
     socket.join(roomId);
-    console.log("Joined room:", roomId);
+
+    console.log(` ${socket.id} joined room: ${roomId}`);
+    console.log("Rooms now:", Array.from(socket.rooms));
   });
 
   socket.on("send_message", async (data) => {
     try {
       const { senderId, receiverId, message } = data;
 
-      if (!senderId || !receiverId || !message) return;
+      if (!senderId || !receiverId || !message) {
+        console.log(" Invalid message data:", data);
+        return;
+      }
 
       const roomId = [senderId, receiverId].sort().join("_");
+
+      console.log(" Sending message to room:", roomId);
 
       const msg = await Message.create({
         roomId,
@@ -81,16 +79,18 @@ io.on("connection", (socket) => {
       });
 
       io.to(roomId).emit("receive_message", msg);
+
+      console.log(" Message emitted:", msg._id);
     } catch (err) {
-      console.error(err);
+      console.error(" Message error:", err.message);
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log(" User disconnected:", socket.id);
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
