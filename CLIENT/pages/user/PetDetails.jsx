@@ -52,7 +52,6 @@ export default function PetDetails() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-10 grid md:grid-cols-2 gap-8 md:gap-10">
-      {/* IMAGE */}
       <div className="w-full">
         <ImageSlider images={pet.image} />
       </div>

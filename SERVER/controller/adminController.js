@@ -4,6 +4,7 @@ const Feedback = require("../model/feedback");
 const Complaint = require("../model/complaint");
 const Contact = require("../model/contact");
 const Activity = require("../model/activity");
+const Seller = require("../model/seller");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -50,7 +51,6 @@ exports.getUsers = async (req, res) => {
 };
 
 
-const Seller = require("../model/seller");
 
 exports.getSellers = async (req, res) => {
   try {

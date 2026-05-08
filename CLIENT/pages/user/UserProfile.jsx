@@ -151,7 +151,6 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-slate-100 py-6 md:py-10 px-3 sm:px-6">
       <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
-        {/* LEFT - PROFILE CARD */}
         <div className="bg-white p-5 md:p-6 rounded-3xl shadow text-center">
           <div className="relative w-fit mx-auto">
             <img

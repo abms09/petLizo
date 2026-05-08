@@ -25,7 +25,7 @@ export default function Contact() {
 
       await axios.post("http://localhost:5000/contact", form);
 
-      setStatus("Message sent successfully ✅");
+      setStatus("Message sent successfully");
 
       setForm({
         name: "",
@@ -34,7 +34,7 @@ export default function Contact() {
       });
     } catch (err) {
       console.error(err);
-      setStatus("Failed to send message ❌");
+      setStatus("Failed to send message");
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,6 @@ export default function Contact() {
 
   return (
     <div className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
-      {/* HERO */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
           Contact Us

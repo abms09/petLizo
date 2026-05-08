@@ -1,23 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { getSocket } from "../src/socket";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export default function Chat() {
-  const location = useLocation();
-  const { state } = location || {};
+  const { otherUserId } = useParams();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user?.id || user?._id;
-  const sellerId = state?.sellerId;
 
-  const roomId =
-    userId && sellerId && userId !== sellerId
-      ? [userId, sellerId].sort().join("_")
-      : null;
+ const roomId =
+  userId && otherUserId
+    ? [userId, otherUserId]
+        .sort()
+        .join("_")
+    : null;
 
   console.log("USER:", userId);
-  console.log("SELLER:", sellerId);
+  console.log("OTHER USER:", otherUserId);
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -37,7 +37,7 @@ export default function Chat() {
       socketRef.current.connect();
     }
 
-    console.log("🔌 Socket initialized");
+    console.log("Socket initialized");
   }, []);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function Chat() {
     socket.emit("join_room", roomId);
 
     const handleMessage = (data) => {
-      console.log("📩 Received:", data);
+      console.log("Received:", data);
       setMessages((prev) => [...prev, data]);
     };
 
@@ -88,23 +88,32 @@ export default function Chat() {
   }, [messages]);
 
   const sendMessage = () => {
-    if (!message.trim()) return;
 
-    if (!userId || !sellerId) {
-      console.error("Missing IDs", { userId, sellerId });
-      return;
-    }
+  if (!message.trim()) return;
 
-    const msgData = {
-      senderId: userId,
-      receiverId: sellerId,
-      message,
-    };
+  if (!userId || !otherUserId) {
 
-    socketRef.current.emit("send_message", msgData);
+    console.error("Missing IDs", {
+      userId,
+      otherUserId,
+    });
 
-    setMessage("");
+    return;
+  }
+
+  const msgData = {
+    senderId: userId,
+    receiverId: otherUserId,
+    message,
   };
+
+  socketRef.current.emit(
+    "send_message",
+    msgData
+  );
+
+  setMessage("");
+};
   if (!roomId) {
     return <p className="text-center mt-10">Invalid chat</p>;
   }

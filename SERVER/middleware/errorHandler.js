@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  console.error("ERROR 💥:", err.stack);
+  console.error("ERROR:", err.stack);
 
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal Server Error";
@@ -39,7 +39,6 @@ const errorHandler = (err, req, res, next) => {
     message:
       isProduction && !err.isOperational ? "Something went wrong" : message,
 
-    // 🔍 Show stack only in development
     ...(!isProduction && { stack: err.stack }),
   });
 };

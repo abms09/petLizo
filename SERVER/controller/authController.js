@@ -101,7 +101,10 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    const isMatch = await bcrypt.compare(otp, user.otp);
+const isMatch = await bcrypt.compare(
+  otp.toString(),
+  user.otp
+);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -181,7 +184,7 @@ exports.forgotPassword = async (req, res) => {
 
     const otp = forgotPasswordOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
-    const otpExpire = Date.now() + 60 * 1000;
+    const otpExpire = Date.now() + 5 * 60 * 1000;
 
     user.otp = hashedOtp;
     user.otpExpire = otpExpire;
@@ -216,7 +219,10 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    const isValid = await bcrypt.compare(otp, user.otp);
+const isValid = await bcrypt.compare(
+  otp.toString(),
+  user.otp
+);
     if (!isValid) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -242,7 +248,7 @@ exports.resentOtp = async (req, res) => {
 
     const otp = forgotPasswordOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
-    const otpExpire = Date.now() + 60 * 1000;
+    const otpExpire = Date.now() + 5 * 60 * 1000;
 
     user.otp = hashedOtp;
     user.otpExpire = otpExpire;

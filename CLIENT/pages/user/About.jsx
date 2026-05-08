@@ -25,7 +25,7 @@ export default function About() {
       if (err.response?.status === 404) {
         navigate("/become-seller");
       } else if (err.response?.status === 403) {
-        toast.error("You are blocked ❌");
+        toast.error("You are blocked");
 
         localStorage.clear();
         window.dispatchEvent(new Event("userChanged"));

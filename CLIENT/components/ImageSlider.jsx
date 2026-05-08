@@ -27,7 +27,7 @@ export default function ImageSlider({ images = [] }) {
         <img
           src={getImageUrl(images[selected])}
           alt="pet"
-          onClick={() => setPreview(getImageUrl(images[selected]))} // 🔥 click to preview
+          onClick={() => setPreview(getImageUrl(images[selected]))}
           className="h-64 md:h-80 w-full object-cover rounded mb-2 cursor-pointer hover:opacity-90"
         />
 
@@ -49,7 +49,7 @@ export default function ImageSlider({ images = [] }) {
       {preview && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
-          onClick={() => setPreview(null)} // close on click
+          onClick={() => setPreview(null)}
         >
           <img
             src={preview}

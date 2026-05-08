@@ -103,7 +103,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/chat" element={<Chat />} />
+     <Route
+  path="/chat/:otherUserId"
+  element={<Chat />}
+/>
 
         {/* admin */}
         <Route

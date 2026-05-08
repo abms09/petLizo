@@ -40,7 +40,7 @@ export default function BecomeSeller() {
 
       if (res.data?.alreadySeller) {
         alert("You are already a seller");
-        navigate("/seller/dashboard");
+        navigate("/seller");
         return;
       }
 
@@ -77,7 +77,6 @@ export default function BecomeSeller() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-        {/* LEFT: INFO */}
         <div className="space-y-6 text-center md:text-left">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
             Become a Seller 🐾

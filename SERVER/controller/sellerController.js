@@ -5,6 +5,7 @@ const Seller = require("../model/seller");
 const Request = require("../model/request");
 const Notification = require("../model/notification");
 const Activity = require("../model/activity");
+const sendEmail = require("../utils/sendEmail");
 
 exports.getSellerProfile = async (req, res) => {
   try {
@@ -157,7 +158,7 @@ exports.editPet = async (req, res) => {
       pet: updatedPet,
     });
   } catch (error) {
-    console.log("ERROR 💥:", error);
+    console.log("ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -310,7 +311,13 @@ exports.approveRequest = async (req, res) => {
   try {
     const request = await Request.findById(req.params.id)
       .populate("buyer")
-      .populate("pet");
+      .populate({
+        path: "pet",
+        populate: {
+          path: "seller",
+          model: "User",
+        },
+      });
 
     if (!request) {
       return res.status(404).json({ message: "Not found" });
@@ -319,7 +326,9 @@ exports.approveRequest = async (req, res) => {
     request.status = "approved";
     await request.save();
 
-    await Pet.findByIdAndUpdate(request.pet._id, { status: "pending" });
+    await Pet.findByIdAndUpdate(request.pet._id, {
+      status: "pending",
+    });
 
     await Notification.create({
       user: request.buyer._id,
@@ -328,21 +337,52 @@ exports.approveRequest = async (req, res) => {
       isRead: false,
     });
 
+    await sendEmail(
+      request.buyer.email,
+      "Pet Request Approved 🎉",
+      `
+      <h2>Your request was approved!</h2>
+
+      <p>Your request for <b>${request.pet.name}</b> was approved.</p>
+
+      <h3>Seller Details</h3>
+
+      <p>
+        Name: ${request.pet.seller.name}
+      </p>
+
+      <p>
+        Email: ${request.pet.seller.email}
+      </p>
+
+      <p>
+        Phone: ${request.pet.seller.phone}
+      </p>
+
+      <br/>
+
+      <p>You can now contact the seller directly.</p>
+      `
+    );
+
     res.json({ message: "Approved" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.rejectRequest = async (req, res) => {
   try {
+
     const request = await Request.findById(req.params.id)
       .populate("buyer")
       .populate("pet");
 
     if (!request) {
-      return res.status(404).json({ message: "Not found" });
+      return res.status(404).json({
+        message: "Not found",
+      });
     }
 
     request.status = "rejected";
@@ -357,18 +397,40 @@ exports.rejectRequest = async (req, res) => {
       }
     }
 
-    if (request.buyer?._id) {
-      await Notification.create({
-        user: request.buyer._id,
-        message: `Your request for ${request.pet?.name || "pet"} was rejected 😔`,
-        status: "rejected",
-        isRead: false,
-      });
-    }
+    await Notification.create({
+      user: request.buyer._id,
+      message: `Your request for ${request.pet.name} was rejected 😔`,
+      status: "rejected",
+      isRead: false,
+    });
 
-    res.json({ message: "Rejected" });
+    await sendEmail(
+      request.buyer.email,
+      "Pet Request Rejected",
+      `
+      <h2>Request Rejected</h2>
+
+      <p>
+        Sorry, your request for
+        <b>${request.pet.name}</b>
+        was rejected by the seller.
+      </p>
+
+      <p>
+        You can still explore other pets on PetMart 🐾
+      </p>
+      `
+    );
+
+    res.json({
+      message: "Rejected",
+    });
+
   } catch (err) {
-    console.error("REJECT ERROR:", err);
-    res.status(500).json({ message: err.message });
+    console.error(err);
+
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };

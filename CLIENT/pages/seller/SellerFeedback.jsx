@@ -31,7 +31,6 @@ export default function SellerFeedback() {
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="mb-6 sm:mb-8 text-center sm:text-left">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
           Customer Feedback

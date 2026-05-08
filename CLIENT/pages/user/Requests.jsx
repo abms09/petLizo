@@ -100,16 +100,50 @@ export default function UserRequests() {
       alert(err.response?.data?.message || "Failed to submit feedback");
     }
   };
+const openChat = (req) => {
 
-  const openChat = (req) => {
-    localStorage.setItem("chatSellerId", req.seller._id);
+  const currentUser = JSON.parse(
+    localStorage.getItem("user")
+  );
 
-    navigate("/chat", {
-      state: {
-        sellerId: req.seller._id,
-      },
-    });
-  };
+  const currentUserId =
+    currentUser?._id || currentUser?.id;
+
+  // seller can be object OR string
+  const sellerId =
+    req?.seller?._id || req?.seller;
+
+  // buyer can be object OR string
+  const buyerId =
+    req?.buyer?._id || req?.buyer;
+
+  let otherUserId;
+
+  // seller logged in
+  if (sellerId === currentUserId) {
+
+    otherUserId = buyerId;
+
+  } else {
+
+    // buyer logged in
+    otherUserId = sellerId;
+  }
+
+  console.log("SELLER ID:", sellerId);
+  console.log("BUYER ID:", buyerId);
+  console.log("CURRENT USER:", currentUserId);
+  console.log("OTHER USER:", otherUserId);
+
+  if (!otherUserId) {
+
+    alert("Chat user not found");
+
+    return;
+  }
+
+  navigate(`/chat/${otherUserId}`);
+};
 
   if (loading) {
     return <p className="text-center py-20">Loading...</p>;
@@ -146,7 +180,6 @@ export default function UserRequests() {
         </select>
       </div>
 
-      {/* GRID */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {currentRequests.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-20">

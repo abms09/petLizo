@@ -15,7 +15,6 @@ export default function Dashboard() {
   });
 
   const [activity, setActivity] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
