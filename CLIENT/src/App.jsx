@@ -50,7 +50,7 @@ import UserRequests from "../pages/user/Requests";
 import UserProfile from "../pages/user/UserProfile";
 import Chat from "../components/Chat";
 import Wishlist from "../pages/user/WishList";
-import SellerPayments from "../pages/seller/sellerPayments";
+import SellerPayments from "../pages/seller/SellerPayments";
 
 function AppWrapper() {
   return (
