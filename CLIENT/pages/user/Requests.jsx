@@ -27,7 +27,7 @@ export default function UserRequests() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-         `${import.meta.env.VITE_API_URL}/user/requests?page=${page}&limit=4`,
+        `${import.meta.env.VITE_API_URL}/user/requests?page=${page}&limit=4`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -84,7 +84,7 @@ export default function UserRequests() {
       console.log("SELLER ID:", sellerId);
 
       await axios.post(
-         `${import.meta.env.VITE_API_URL}/user/feedback`,
+        `${import.meta.env.VITE_API_URL}/user/feedback`,
         {
           petId,
           sellerId,
@@ -129,7 +129,7 @@ export default function UserRequests() {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-         `${import.meta.env.VITE_API_URL}/payment/create-order`,
+        `${import.meta.env.VITE_API_URL}/payment/create-order`,
         { requestId: req._id },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -147,7 +147,7 @@ export default function UserRequests() {
         handler: async function (response) {
           try {
             await axios.post(
-               `${import.meta.env.VITE_API_URL}/payment/verify`,
+              `${import.meta.env.VITE_API_URL}/payment/verify`,
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -232,7 +232,7 @@ export default function UserRequests() {
 
               imageUrl = img?.startsWith("http")
                 ? img
-                :  `${import.meta.env.VITE_API_URL}/uploads/${img}`;
+                : `${import.meta.env.VITE_API_URL}/uploads/${img}`;
             }
 
             return (
@@ -304,14 +304,23 @@ export default function UserRequests() {
                       >
                         ❌ Rejected
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => handlePayment(req)}
-                        className="w-full bg-green-600 text-white py-2.5 rounded-xl"
-                      >
-                        💳 Pay Advance
-                      </button>
-                    )}
+                    ) : req.status === "approved" ? (
+                      <>
+                        <button
+                          onClick={() => handlePayment(req)}
+                          className="w-full bg-green-600 text-white py-2.5 rounded-xl"
+                        >
+                          💳 Pay Advance
+                        </button>
+
+                        <button
+                          onClick={() => openChat(req)}
+                          className="w-full bg-blue-600 text-white py-2.5 rounded-xl"
+                        >
+                          💬 Contact Seller
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>
