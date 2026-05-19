@@ -28,18 +28,21 @@ export default function SellerRequests() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/requests`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/seller/requests`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
 
-        params: {
-          page,
-          limit: itemsPerPage,
-          search: searchValue,
-          status: statusValue,
+          params: {
+            page,
+            limit: itemsPerPage,
+            search: searchValue,
+            status: statusValue,
+          },
         },
-      });
+      );
 
       setRequests(res.data.requests || []);
 
@@ -70,7 +73,7 @@ export default function SellerRequests() {
       setLoadingId(id);
       console.log("APPROVE ID:", id);
       await axios.put(
-         `${import.meta.env.VITE_API_URL}/seller/approve/${id}`,
+        `${import.meta.env.VITE_API_URL}/seller/approve/${id}`,
         {},
         {
           headers: {
@@ -92,11 +95,14 @@ export default function SellerRequests() {
     try {
       setLoadingId(id);
 
-      await axios.delete( `${import.meta.env.VITE_API_URL}/seller/reject/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/seller/reject/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         },
-      });
+      );
 
       fetchRequests(currentPage);
     } catch (err) {
@@ -110,7 +116,7 @@ export default function SellerRequests() {
       setLoadingId(requestId);
 
       await axios.put(
-         `${import.meta.env.VITE_API_URL}/pets/sold/${petId}`,
+        `${import.meta.env.VITE_API_URL}/pets/sold/${petId}`,
         {},
         {
           headers: {
@@ -196,9 +202,8 @@ export default function SellerRequests() {
           {requests.map((req) => {
             const imageUrl =
               req.pet?.image?.length > 0
-                ?  `${import.meta.env.VITE_API_URL}/uploads/${req.pet.image[0]}`
+                ? `${import.meta.env.VITE_API_URL}/uploads/${req.pet.image[0].replace(/\\/g, "/")}`
                 : "https://via.placeholder.com/300";
-
             const status = req.status?.toLowerCase();
 
             return (
@@ -308,19 +313,17 @@ export default function SellerRequests() {
                         <div className="w-full mt-3 bg-green-100 text-green-700 py-2 rounded text-sm text-center font-semibold">
                           ✅ This Pet is Sold
                         </div>
-                      ) : (
-                        req.paymentStatus === "partial" && (
-                          <button
-                            onClick={() => handleMarkSold(req.pet._id, req._id)}
-                            disabled={loadingId === req._id}
-                            className="w-full mt-3 bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {loadingId === req._id
-                              ? "Processing..."
-                              : "✅ Mark as Sold"}
-                          </button>
-                        )
-                      )}
+                      ) : req.paymentStatus === "partial" ? (
+                        <button
+                          onClick={() => handleMarkSold(req.pet._id, req._id)}
+                          disabled={loadingId === req._id}
+                          className="w-full mt-3 bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {loadingId === req._id
+                            ? "Processing..."
+                            : "✅ Mark as Sold"}
+                        </button>
+                      ) : null}
                     </>
                   )}
                 </div>
