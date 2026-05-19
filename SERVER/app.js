@@ -17,11 +17,16 @@ connectDb();
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://pet-lizo-85cystbuo-abms09s-projects.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:allowedOrigins,
     credentials: true,
-  }),
+  })
 );
 
 app.use("/auth", require("./routes/authRoutes"));
@@ -41,7 +46,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin:allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
