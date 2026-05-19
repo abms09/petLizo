@@ -31,7 +31,7 @@ export default function Sidebar({ mobile }) {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await axios.get("http://localhost:5000/seller/requests", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/requests`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

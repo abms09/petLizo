@@ -74,7 +74,7 @@ export default function SellerNavbar() {
               <img
                 src={
                   user?.image
-                    ? `http://localhost:5000/uploads/${user.image}`
+                    ?  `${import.meta.env.VITE_API_URL}/uploads/${user.image}`
                     : "https://i.pravatar.cc/40"
                 }
                 className="w-9 h-9 rounded-full object-cover border"

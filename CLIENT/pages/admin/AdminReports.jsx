@@ -25,7 +25,7 @@ export default function AdminReports() {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        `http://localhost:5000/admin/report?from=${fromDate}&to=${toDate}`,
+         `${import.meta.env.VITE_API_URL}/admin/report?from=${fromDate}&to=${toDate}`,
         {
           responseType: "blob",
           headers: {

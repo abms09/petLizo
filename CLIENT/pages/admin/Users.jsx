@@ -11,7 +11,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/admin/users", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/users`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -29,7 +29,7 @@ export default function Users() {
   const toggleBlock = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/admin/users/${id}/toggle-status`,
+         `${import.meta.env.VITE_API_URL}/admin/users/${id}/toggle-status`,
         {},
         {
           headers: {

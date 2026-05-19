@@ -70,7 +70,7 @@ export default function Chat() {
       try {
         setLoading(true);
 
-        const res = await axios.get(`http://localhost:5000/chat/${roomId}`);
+        const res = await axios.get( `${import.meta.env.VITE_API_URL}/chat/${roomId}`);
 
         setMessages(res.data || []);
       } catch (err) {

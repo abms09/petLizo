@@ -40,7 +40,7 @@ export default function MyPets() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/seller/mypets", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/mypets`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -78,7 +78,7 @@ export default function MyPets() {
     if (!window.confirm("Delete this pet?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/seller/deletepet/${id}`, {
+      await axios.delete( `${import.meta.env.VITE_API_URL}/seller/deletepet/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

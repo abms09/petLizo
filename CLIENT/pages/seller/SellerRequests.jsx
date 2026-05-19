@@ -28,7 +28,7 @@ export default function SellerRequests() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/seller/requests", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/requests`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -70,7 +70,7 @@ export default function SellerRequests() {
       setLoadingId(id);
       console.log("APPROVE ID:", id);
       await axios.put(
-        `http://localhost:5000/seller/approve/${id}`,
+         `${import.meta.env.VITE_API_URL}/seller/approve/${id}`,
         {},
         {
           headers: {
@@ -92,7 +92,7 @@ export default function SellerRequests() {
     try {
       setLoadingId(id);
 
-      await axios.delete(`http://localhost:5000/seller/reject/${id}`, {
+      await axios.delete( `${import.meta.env.VITE_API_URL}/seller/reject/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -110,7 +110,7 @@ export default function SellerRequests() {
       setLoadingId(requestId);
 
       await axios.put(
-        `http://localhost:5000/pets/sold/${petId}`,
+         `${import.meta.env.VITE_API_URL}/pets/sold/${petId}`,
         {},
         {
           headers: {
@@ -196,7 +196,7 @@ export default function SellerRequests() {
           {requests.map((req) => {
             const imageUrl =
               req.pet?.image?.length > 0
-                ? `http://localhost:5000/uploads/${req.pet.image[0]}`
+                ?  `${import.meta.env.VITE_API_URL}/uploads/${req.pet.image[0]}`
                 : "https://via.placeholder.com/300";
 
             const status = req.status?.toLowerCase();

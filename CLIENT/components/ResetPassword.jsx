@@ -36,7 +36,7 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/auth/reset-password", {
+      await axios.post( `${import.meta.env.VITE_API_URL}/auth/reset-password`, {
         email,
         otp: form.otp,
         newPassword: form.newPassword,

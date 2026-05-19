@@ -27,7 +27,7 @@ export default function UserRequests() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        `http://localhost:5000/user/requests?page=${page}&limit=4`,
+         `${import.meta.env.VITE_API_URL}/user/requests?page=${page}&limit=4`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -84,7 +84,7 @@ export default function UserRequests() {
       console.log("SELLER ID:", sellerId);
 
       await axios.post(
-        "http://localhost:5000/user/feedback",
+         `${import.meta.env.VITE_API_URL}/user/feedback`,
         {
           petId,
           sellerId,
@@ -129,7 +129,7 @@ export default function UserRequests() {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-        "http://localhost:5000/payment/create-order",
+         `${import.meta.env.VITE_API_URL}/payment/create-order`,
         { requestId: req._id },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -147,7 +147,7 @@ export default function UserRequests() {
         handler: async function (response) {
           try {
             await axios.post(
-              "http://localhost:5000/payment/verify",
+               `${import.meta.env.VITE_API_URL}/payment/verify`,
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -232,7 +232,7 @@ export default function UserRequests() {
 
               imageUrl = img?.startsWith("http")
                 ? img
-                : `http://localhost:5000/uploads/${img}`;
+                :  `${import.meta.env.VITE_API_URL}/uploads/${img}`;
             }
 
             return (

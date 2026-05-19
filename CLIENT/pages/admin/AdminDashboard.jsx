@@ -80,7 +80,7 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
-        const res = await axios.get("http://localhost:5000/admin/dashboard", {
+        const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -89,7 +89,7 @@ export default function Dashboard() {
         setStats(res.data);
 
         const activityRes = await axios.get(
-          "http://localhost:5000/admin/recent-activity",
+           `${import.meta.env.VITE_API_URL}/admin/recent-activity`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

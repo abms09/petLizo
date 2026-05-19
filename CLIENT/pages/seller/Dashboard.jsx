@@ -26,7 +26,7 @@ export default function SellerDashboard() {
         return;
       }
 
-      const res = await axios.get("http://localhost:5000/seller/dashboard", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/dashboard`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

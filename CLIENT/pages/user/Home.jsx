@@ -19,7 +19,7 @@ export default function Home() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const res = await axios.get("http://localhost:5000/notification/my", {
+        const res = await axios.get( `${import.meta.env.VITE_API_URL}/notification/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -39,7 +39,7 @@ export default function Home() {
 
         if (unread.length > 0) {
           await axios.put(
-            "http://localhost:5000/notification/read",
+             `${import.meta.env.VITE_API_URL}/notification/read`,
             {},
             {
               headers: { Authorization: `Bearer ${token}` },
@@ -66,7 +66,7 @@ export default function Home() {
     }
 
     try {
-      await axios.get("http://localhost:5000/seller/profile", {
+      await axios.get( `${import.meta.env.VITE_API_URL}/seller/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -14,7 +14,7 @@ export default function PetDetails() {
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/pets/${id}`);
+        const res = await axios.get( `${import.meta.env.VITE_API_URL}/pets/${id}`);
 
         setPet(res.data.pet);
 
@@ -40,7 +40,7 @@ export default function PetDetails() {
 
     try {
       await axios.post(
-        `http://localhost:5000/user/request-pet/${petId}`,
+         `${import.meta.env.VITE_API_URL}/user/request-pet/${petId}`,
         {},
         {
           headers: {

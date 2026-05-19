@@ -16,7 +16,7 @@ export default function Wishlist() {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/pets");
+        const res = await axios.get( `${import.meta.env.VITE_API_URL}/pets`);
         const data = res.data.pets || res.data;
 
         const filtered = data.filter((pet) => wishlistIds.includes(pet._id));
@@ -72,7 +72,7 @@ export default function Wishlist() {
               let img = pet.image[0].replace(/\\/g, "/");
               imageUrl = img.startsWith("http")
                 ? img
-                : `http://localhost:5000/uploads/${img}`;
+                :  `${import.meta.env.VITE_API_URL}/uploads/${img}`;
             }
 
             return (

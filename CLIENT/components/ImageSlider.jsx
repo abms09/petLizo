@@ -8,7 +8,7 @@ export default function ImageSlider({ images = [] }) {
     if (!img) return "https://via.placeholder.com/300";
 
     let clean = img.replace(/\\/g, "/").replace("uploads/", "");
-    return `http://localhost:5000/uploads/${clean}`;
+    return  `${import.meta.env.VITE_API_URL}/uploads/${clean}`;
   };
 
   if (!images || images.length === 0) {

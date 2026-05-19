@@ -35,7 +35,7 @@ export default function EditPet({ pet, onUpdated }) {
 
       setPreview(
         pet.image
-          ? `http://localhost:5000/${pet.image}`
+          ?  `${import.meta.env.VITE_API_URL}/${pet.image}`
           : "https://via.placeholder.com/300",
       );
     }
@@ -92,7 +92,7 @@ export default function EditPet({ pet, onUpdated }) {
       setLoading(true);
 
       await axios.put(
-        `http://localhost:5000/seller/editpet/${pet._id}`,
+         `${import.meta.env.VITE_API_URL}/seller/editpet/${pet._id}`,
         formData,
         {
           headers: {

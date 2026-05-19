@@ -16,7 +16,7 @@ export default function About() {
     }
 
     try {
-      await axios.get("http://localhost:5000/seller/profile", {
+      await axios.get( `${import.meta.env.VITE_API_URL}/seller/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

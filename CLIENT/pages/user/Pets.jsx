@@ -27,7 +27,7 @@ export default function Pets() {
         const token = localStorage.getItem("token");
 
         const res = await axios.get(
-          `http://localhost:5000/pets?page=${currentPage}&limit=8&search=${search}&category=${categoryFilter}`,
+           `${import.meta.env.VITE_API_URL}/pets?page=${currentPage}&limit=8&search=${search}&category=${categoryFilter}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ export default function Pets() {
 
               imageUrl = img.startsWith("http")
                 ? img
-                : `http://localhost:5000/uploads/${img}`;
+                :  `${import.meta.env.VITE_API_URL}/uploads/${img}`;
             }
 
             const isWishlisted = wishlist.has(pet._id);

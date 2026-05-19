@@ -34,7 +34,7 @@ export default function Sidebar({ mobile = false }) {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/admin/counts", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/counts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

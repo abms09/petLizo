@@ -74,7 +74,7 @@ export default function Navbar() {
     }
 
     try {
-      await axios.get("http://localhost:5000/seller/profile", {
+      await axios.get( `${import.meta.env.VITE_API_URL}/seller/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -174,7 +174,7 @@ export default function Navbar() {
                 <NavLink to="/userProfile" className="flex items-center gap-2">
                   {user?.image ? (
                     <img
-                      src={`http://localhost:5000/uploads/${user.image}`}
+                      src={ `${import.meta.env.VITE_API_URL}/uploads/${user.image}`}
                       alt="profile"
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => (e.target.src = "/default-avatar.png")}
@@ -266,7 +266,7 @@ export default function Navbar() {
               >
                 {user?.image ? (
                   <img
-                    src={`http://localhost:5000/uploads/${user.image}`}
+                    src={ `${import.meta.env.VITE_API_URL}/uploads/${user.image}`}
                     alt="profile"
                     className="w-10 h-10 rounded-full object-cover"
                     onError={(e) => (e.target.src = "/default-avatar.png")}

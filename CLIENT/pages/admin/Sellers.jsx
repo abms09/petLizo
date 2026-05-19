@@ -10,7 +10,7 @@ export default function Sellers() {
 
   const fetchSellers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/admin/sellers", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/sellers`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -25,7 +25,7 @@ export default function Sellers() {
   const toggleBlock = async (userId) => {
     try {
       await axios.put(
-        `http://localhost:5000/admin/users/${userId}/toggle-status`,
+         `${import.meta.env.VITE_API_URL}/admin/users/${userId}/toggle-status`,
         {},
         {
           headers: {

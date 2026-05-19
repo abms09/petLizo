@@ -13,7 +13,7 @@ export default function ContactMessages() {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:5000/admin/contacts/read-all",
+         `${import.meta.env.VITE_API_URL}/admin/contacts/read-all`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -27,7 +27,7 @@ export default function ContactMessages() {
   }, []);
   const fetchMessages = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/contact", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/contact`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

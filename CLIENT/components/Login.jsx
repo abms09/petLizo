@@ -21,7 +21,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/auth/login", form);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, form);
 
       const user = res.data.user;
 
@@ -61,7 +61,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      await axios.post("http://localhost:5000/auth/forgot-password", {
+      await axios.post( `${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
         email: form.email,
       });
 

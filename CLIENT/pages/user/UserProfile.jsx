@@ -32,7 +32,7 @@ export default function UserProfile() {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/user/profile", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/user/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -47,7 +47,7 @@ export default function UserProfile() {
       });
 
       setPreview(
-        user?.image ? `http://localhost:5000/uploads/${user.image}` : "",
+        user?.image ?  `${import.meta.env.VITE_API_URL}/uploads/${user.image}` : "",
       );
 
       localStorage.setItem("user", JSON.stringify(user));
@@ -88,7 +88,7 @@ export default function UserProfile() {
     try {
       setSaving(true);
 
-      await axios.put("http://localhost:5000/user/updateprofile", formData, {
+      await axios.put( `${import.meta.env.VITE_API_URL}/user/updateprofile`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -121,7 +121,7 @@ export default function UserProfile() {
       setChangingPass(true);
 
       await axios.put(
-        "http://localhost:5000/auth/change-password",
+         `${import.meta.env.VITE_API_URL}/auth/change-password`,
         { currentPassword, newPassword },
         {
           headers: {

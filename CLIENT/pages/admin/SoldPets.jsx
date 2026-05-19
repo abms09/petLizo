@@ -28,7 +28,7 @@ export default function SoldPets() {
         return;
       }
 
-      const res = await axios.get("http://localhost:5000/admin/sold-pets", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/sold-pets`, {
         params: {
           page: currentPage,
           limit: itemsPerPage,

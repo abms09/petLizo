@@ -17,7 +17,7 @@ export default function SellerPayments() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/seller/payments", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/payments`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -90,7 +90,7 @@ export default function SellerPayments() {
                 <img
                   src={
                     p.pet?.image?.[0]
-                      ? `http://localhost:5000/uploads/${p.pet.image[0]}`
+                      ?  `${import.meta.env.VITE_API_URL}/uploads/${p.pet.image[0]}`
                       : "/no-image.png"
                   }
                   className="w-16 h-16 rounded-lg object-cover"

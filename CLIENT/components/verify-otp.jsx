@@ -47,7 +47,7 @@ export default function VerifyOtp() {
     const finalOtp = otp.join("");
 
     try {
-      await axios.post("http://localhost:5000/auth/verify-otp", {
+      await axios.post( `${import.meta.env.VITE_API_URL}/auth/verify-otp`, {
         email,
         otp: finalOtp,
       });
@@ -64,7 +64,7 @@ export default function VerifyOtp() {
 
   const handleResend = async () => {
     try {
-      await axios.post("http://localhost:5000/auth/resend-otp", {
+      await axios.post( `${import.meta.env.VITE_API_URL}/auth/resend-otp`, {
         email,
       });
 

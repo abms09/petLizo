@@ -32,7 +32,7 @@ export default function SellerProfile() {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/seller/profile", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -46,7 +46,7 @@ export default function SellerProfile() {
         phone: user.phone || "",
       });
 
-      setPreview(user.image ? `http://localhost:5000/${user.image}` : "");
+      setPreview(user.image ?  `${import.meta.env.VITE_API_URL}/${user.image}` : "");
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -79,7 +79,7 @@ export default function SellerProfile() {
     try {
       setSaving(true);
 
-      await axios.put("http://localhost:5000/seller/updateprofile", formData, {
+      await axios.put( `${import.meta.env.VITE_API_URL}/seller/updateprofile`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -122,7 +122,7 @@ export default function SellerProfile() {
       setChangingPass(true);
 
       await axios.put(
-        "http://localhost:5000/auth/change-password",
+         `${import.meta.env.VITE_API_URL}/auth/change-password`,
         {
           currentPassword,
           newPassword,

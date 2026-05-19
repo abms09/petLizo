@@ -33,7 +33,7 @@ export default function Pets() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/admin/pets", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/pets`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,7 +86,7 @@ export default function Pets() {
   const handleApprove = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/admin/pets/${id}/approve`,
+         `${import.meta.env.VITE_API_URL}/admin/pets/${id}/approve`,
         {},
         {
           headers: {
@@ -104,7 +104,7 @@ export default function Pets() {
   const handleReject = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/admin/pets/${id}/reject`,
+         `${import.meta.env.VITE_API_URL}/admin/pets/${id}/reject`,
         {},
         {
           headers: {

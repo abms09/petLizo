@@ -12,7 +12,7 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/user/orders", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/user/orders`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

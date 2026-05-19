@@ -12,7 +12,7 @@ export default function Feedbacks() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/admin/feedbacks", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/feedbacks`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -43,7 +43,7 @@ export default function Feedbacks() {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:5000/admin/feedbacks/read-all",
+         `${import.meta.env.VITE_API_URL}/admin/feedbacks/read-all`,
         {},
         {
           headers: {

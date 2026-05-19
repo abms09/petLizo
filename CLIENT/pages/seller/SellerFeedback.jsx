@@ -11,7 +11,7 @@ export default function SellerFeedback() {
 
   const fetchFeedbacks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/seller/feedbacks", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/feedbacks`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -48,7 +48,7 @@ export default function SellerFeedback() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {feedbacks.map((fb) => {
             const userImage = fb.user?.image
-              ? `http://localhost:5000/uploads/${fb.user.image}`
+              ?  `${import.meta.env.VITE_API_URL}/uploads/${fb.user.image}`
               : null;
 
             return (

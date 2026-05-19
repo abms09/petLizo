@@ -12,7 +12,7 @@ export default function Complaints() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/admin/complaints", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/admin/complaints`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

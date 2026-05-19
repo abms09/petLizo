@@ -20,7 +20,7 @@ export default function SoldPets() {
     try {
       setLoading(true);
 
-      const res = await axios.get("http://localhost:5000/seller/sold-pets", {
+      const res = await axios.get( `${import.meta.env.VITE_API_URL}/seller/sold-pets`, {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -88,9 +88,9 @@ export default function SoldPets() {
                 let imageUrl = "/no-image.png";
 
                 if (Array.isArray(pet.image) && pet.image.length > 0) {
-                  imageUrl = `http://localhost:5000/uploads/${pet.image[0]}`;
+                  imageUrl =  `${import.meta.env.VITE_API_URL}/uploads/${pet.image[0]}`;
                 } else if (pet.image) {
-                  imageUrl = `http://localhost:5000/uploads/${pet.image}`;
+                  imageUrl =  `${import.meta.env.VITE_API_URL}/uploads/${pet.image}`;
                 }
 
                 return (
