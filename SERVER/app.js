@@ -21,7 +21,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 app.use("/auth", require("./routes/authRoutes"));
@@ -33,6 +33,7 @@ app.use("/user", require("./routes/userRoutes"));
 app.use("/request", require("./routes/requestRoutes"));
 app.use("/notification", require("./routes/notificationRoutes"));
 app.use("/chat", require("./routes/chatRoutes"));
+app.use("/payment", require("./routes/paymentRoutes"));
 
 app.use(require("./middleware/errorHandler"));
 

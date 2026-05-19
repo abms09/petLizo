@@ -16,11 +16,11 @@ const {
   markFeedbacksRead,
   markMsgAsRead,
   getRecentActivity,
+  generateReport,
 } = require("../controller/adminController");
 
 const auth = require("../middleware/authMiddleware");
 const isAdmin = require("../middleware/isAdmin");
-
 
 router.get("/dashboard", auth, isAdmin, getDashboardStats);
 router.get("/sellers", auth, isAdmin, getSellers);
@@ -36,5 +36,5 @@ router.get("/counts", auth, isAdmin, getCounts);
 router.put("/contacts/read-all", auth, isAdmin, markMsgAsRead);
 router.put("/feedbacks/read-all", auth, isAdmin, markFeedbacksRead);
 router.get("/recent-activity", auth, isAdmin, getRecentActivity);
-
+router.get("/report", auth, isAdmin, generateReport);
 module.exports = router;

@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 
 export default function Pets() {
   const [pets, setPets] = useState([]);
-  const [filtered, setFiltered] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,7 +13,7 @@ export default function Pets() {
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [totalPages, setTotalPages] = useState(1);
 
   const [wishlist, setWishlist] = useState(() => {
     return new Set(JSON.parse(localStorage.getItem("wishlist")) || []);
@@ -23,20 +22,21 @@ export default function Pets() {
   useEffect(() => {
     const fetchPets = async () => {
       try {
+        setLoading(true);
+
         const token = localStorage.getItem("token");
 
-        const res = await axios.get("http://localhost:5000/pets", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = res.data.pets || res.data;
-
-        const availablePets = data.filter(
-          (pet) => pet.status === "available" || pet.status === "pending",
+        const res = await axios.get(
+          `http://localhost:5000/pets?page=${currentPage}&limit=8&search=${search}&category=${categoryFilter}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
-        setPets(availablePets);
-        setFiltered(availablePets);
+        setPets(res.data.pets);
+        setTotalPages(res.data.totalPages);
       } catch (err) {
         console.error(err);
         setError("Failed to load pets");
@@ -46,7 +46,11 @@ export default function Pets() {
     };
 
     fetchPets();
-  }, []);
+  }, [currentPage, search, categoryFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter]);
 
   const toggleWishlist = (petId) => {
     const updated = new Set(wishlist);
@@ -60,31 +64,11 @@ export default function Pets() {
     const updatedArray = [...updated];
 
     setWishlist(new Set(updatedArray));
+
     localStorage.setItem("wishlist", JSON.stringify(updatedArray));
 
     window.dispatchEvent(new Event("wishlistUpdated"));
   };
-
-  useEffect(() => {
-    let data = [...pets];
-
-    if (search) {
-      data = data.filter((pet) =>
-        pet.name?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    if (categoryFilter !== "all") {
-      data = data.filter((pet) => pet.category === categoryFilter);
-    }
-
-    setFiltered(data);
-    setCurrentPage(1);
-  }, [search, categoryFilter, pets]);
-
-  const indexOfLast = currentPage * itemsPerPage;
-  const currentPets = filtered.slice(indexOfLast - itemsPerPage, indexOfLast);
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   if (loading) {
     return <div className="text-center py-20">Loading pets...</div>;
@@ -98,6 +82,7 @@ export default function Pets() {
     <div className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white min-h-screen">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <h1 className="text-2xl sm:text-3xl font-bold">Browse Pets</h1>
+
         <p className="text-gray-500 text-sm sm:text-base">
           Find your perfect companion
         </p>
@@ -126,16 +111,17 @@ export default function Pets() {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {currentPets.length === 0 ? (
+        {pets.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-20">
             No pets found 🐾
           </div>
         ) : (
-          currentPets.map((pet) => {
+          pets.map((pet) => {
             let imageUrl = "/no-image.png";
 
             if (Array.isArray(pet?.image) && pet.image.length > 0) {
               let img = pet.image[0].replace(/\\/g, "/");
+
               imageUrl = img.startsWith("http")
                 ? img
                 : `http://localhost:5000/uploads/${img}`;
@@ -148,12 +134,6 @@ export default function Pets() {
                 key={pet._id}
                 className="relative bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300"
               >
-                {pet.status === "pending" && (
-                  <span className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 text-xs rounded">
-                    REQUESTED
-                  </span>
-                )}
-
                 <div className="aspect-4/3 overflow-hidden">
                   <img
                     src={imageUrl}
@@ -187,11 +167,11 @@ export default function Pets() {
                     <Link
                       to={`/pets/${pet._id}`}
                       className="flex items-center gap-1.5 text-xs font-medium 
-             bg-slate-900 text-white 
-             px-3 py-1.5 rounded-full
-             hover:bg-slate-700 
-             transition-all duration-200 
-             shadow-sm hover:shadow-md group"
+                      bg-slate-900 text-white 
+                      px-3 py-1.5 rounded-full
+                      hover:bg-slate-700 
+                      transition-all duration-200 
+                      shadow-sm hover:shadow-md group"
                     >
                       View Details
                       <ArrowRight
@@ -208,11 +188,11 @@ export default function Pets() {
       </section>
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 pb-10">
+        <div className="flex justify-center gap-2 pb-10 flex-wrap">
           <button
             onClick={() => setCurrentPage((p) => p - 1)}
             disabled={currentPage === 1}
-            className="px-3 py-1 bg-gray-200 rounded"
+            className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-800 disabled:opacity-50"
           >
             Prev
           </button>
@@ -221,8 +201,10 @@ export default function Pets() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              className={`px-4 py-2 rounded-lg transition ${
+                currentPage === i + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 dark:bg-slate-800"
               }`}
             >
               {i + 1}
@@ -232,7 +214,7 @@ export default function Pets() {
           <button
             onClick={() => setCurrentPage((p) => p + 1)}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 bg-gray-200 rounded"
+            className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-slate-800 disabled:opacity-50"
           >
             Next
           </button>

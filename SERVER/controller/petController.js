@@ -1,5 +1,7 @@
 const Pet = require("../model/pet");
 const Activity = require("../model/activity");
+const Request = require("../model/request");
+const Payment = require("../model/payment");
 
 exports.createPet = async (req, res) => {
   try {
@@ -12,7 +14,7 @@ exports.createPet = async (req, res) => {
       price: req.body.price,
       category: req.body.category,
       description: req.body.description || "",
-      gender: req.body.gender || "male", 
+      gender: req.body.gender || "male",
       image: req.files?.map((file) => file.filename) || [],
       seller: req.user._id,
     });
@@ -27,14 +29,48 @@ exports.createPet = async (req, res) => {
 
 exports.getAllPets = async (req, res) => {
   try {
-    const pets = await Pet.find({
-      status: { $in: ["available", "pending"] },
-      approved: "approved", 
-    }).populate("seller", "name email");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
 
-    res.json({ pets });
+    const search = req.query.search || "";
+    const category = req.query.category || "all";
+
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      status: "available",
+      approved: "approved",
+    };
+
+    if (search) {
+      filter.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    if (category !== "all") {
+      filter.category = category;
+    }
+
+    const pets = await Pet.find(filter)
+      .populate("seller", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPets = await Pet.countDocuments(filter);
+
+    res.json({
+      pets,
+      currentPage: page,
+      totalPages: Math.ceil(totalPets / limit),
+      totalPets,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 exports.getSoldPets = async (req, res) => {
@@ -49,27 +85,62 @@ exports.getSoldPets = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.markAsSold = async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id);
 
-    if (!pet) return res.status(404).json({ message: "Pet not found" });
+    if (!pet) {
+      return res.status(404).json({
+        message: "Pet not found",
+      });
+    }
 
     pet.status = "sold";
+    pet.soldAt = new Date();
+
     await pet.save();
 
-    await Activity.create({
-      type: "sale",
-      message: `${pet.name} sold for ₹${pet.price}`,
+    await Request.updateMany(
+      { pet: pet._id },
+      {
+        $set: {
+          status: "sold",
+          paymentStatus: "completed",
+        },
+      },
+    );
+
+    const payments = await Payment.find({
+      pet: pet._id,
     });
 
-    res.json({ message: "Marked as sold", pet });
+    for (let p of payments) {
+      p.status = "paid";
+
+      p.paymentType = "full";
+
+      p.saleStatus = "sold";
+
+      p.remainingAmount = 0;
+
+      p.sellerAmount = p.totalAmount - p.commission;
+
+      await p.save();
+    }
+
+    res.json({
+      success: true,
+      message: "Pet marked as sold successfully",
+      pet,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.log(err);
+
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
-
 exports.getMyPets = async (req, res) => {
   try {
     const pets = await Pet.find({ seller: req.user._id });
@@ -138,15 +209,25 @@ exports.updatePetStatus = async (req, res) => {
 };
 exports.getSinglePet = async (req, res) => {
   try {
-    const pet = await Pet.findById(req.params.id).populate(
-      "seller",
-      "name email",
-    );
+    const pet = await Pet.findById(req.params.id)
+      .populate("seller", "name email")
+      .lean();
+
     if (!pet) {
-      return res.status(404).json({ message: "Pet not found" });
+      return res.status(404).json({
+        message: "Pet not found",
+      });
     }
-    res.status(200).json({ success: true, pet });
+
+    pet.requests = pet.requests || [];
+
+    res.status(200).json({
+      success: true,
+      pet,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

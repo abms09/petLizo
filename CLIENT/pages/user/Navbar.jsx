@@ -5,161 +5,97 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 export default function Navbar() {
-
   const [isOpen, setIsOpen] = useState(false);
 
   const [user, setUser] = useState(null);
 
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const navigate = useNavigate();
 
-  // LOAD USER
   useEffect(() => {
-
     const loadUser = () => {
-
       try {
-
-        const storedUser = JSON.parse(
-          localStorage.getItem("user")
-        );
+        const storedUser = JSON.parse(localStorage.getItem("user"));
 
         setUser(storedUser);
 
-        setIsLoggedIn(
-          !!localStorage.getItem("token")
-        );
-
+        setIsLoggedIn(!!localStorage.getItem("token"));
       } catch {
-
         setUser(null);
 
         setIsLoggedIn(false);
-
       }
     };
 
     loadUser();
 
-    window.addEventListener(
-      "userChanged",
-      loadUser
-    );
+    window.addEventListener("userChanged", loadUser);
 
     return () => {
-
-      window.removeEventListener(
-        "userChanged",
-        loadUser
-      );
-
+      window.removeEventListener("userChanged", loadUser);
     };
-
   }, []);
 
-  // WISHLIST
   useEffect(() => {
-
     const updateWishlist = () => {
-
-      const stored =
-        JSON.parse(
-          localStorage.getItem("wishlist")
-        ) || [];
+      const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
 
       setWishlistCount(stored.length);
     };
 
     updateWishlist();
 
-    window.addEventListener(
-      "wishlistUpdated",
-      updateWishlist
-    );
+    window.addEventListener("wishlistUpdated", updateWishlist);
 
     return () => {
-
-      window.removeEventListener(
-        "wishlistUpdated",
-        updateWishlist
-      );
-
+      window.removeEventListener("wishlistUpdated", updateWishlist);
     };
-
   }, []);
 
-  // LOGOUT
   const handleLogout = () => {
-
     localStorage.clear();
 
-    window.dispatchEvent(
-      new Event("userChanged")
-    );
+    window.dispatchEvent(new Event("userChanged"));
 
     toast.success("Logged out");
 
     navigate("/");
   };
 
-  // SELLER BUTTON
   const sellerClick = async () => {
-
-    const token =
-      localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     if (!token) {
-
       navigate("/login");
-
       return;
     }
 
     try {
-
-      await axios.get(
-        "http://localhost:5000/seller/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.get("http://localhost:5000/seller/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       navigate("/seller");
-
     } catch (err) {
-
       console.log(err.response?.data);
 
       if (err.response?.status === 404) {
-
         navigate("/become-seller");
-
-      } else if (
-        err.response?.status === 403
-      ) {
-
+      } else if (err.response?.status === 403) {
         toast.error("You are blocked ❌");
 
         localStorage.clear();
 
-        window.dispatchEvent(
-          new Event("userChanged")
-        );
+        window.dispatchEvent(new Event("userChanged"));
 
         navigate("/");
-
       } else {
-
-        toast.error(
-          "Session expired. Login again."
-        );
+        toast.error("Session expired. Login again.");
 
         navigate("/login");
       }
@@ -176,50 +112,26 @@ export default function Navbar() {
 
   const linkClasses = ({ isActive }) =>
     `px-1 py-2 text-sm font-medium transition ${
-      isActive
-        ? "text-slate-900"
-        : "text-slate-500 hover:text-slate-900"
+      isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-900"
     }`;
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b fixed w-full top-0 z-50">
-
       <div className="max-w-7xl mx-auto px-4">
-
         <div className="flex justify-between items-center h-16">
-
-          {/* LOGO */}
-          <NavLink
-            to="/"
-            className="text-3xl font-extrabold"
-          >
+          <NavLink to="/" className="text-3xl font-extrabold">
             Pet
-            <span className="text-slate-400">
-              Lizo
-            </span>
+            <span className="text-slate-400">Lizo</span>
           </NavLink>
 
-          {/* DESKTOP MENU */}
           <div className="hidden md:flex items-center space-x-6">
-
             {navLinks.map((link) => (
-
-              <NavLink
-                key={link.name}
-                to={link.path}
-                className={linkClasses}
-              >
+              <NavLink key={link.name} to={link.path} className={linkClasses}>
                 {link.name}
               </NavLink>
-
             ))}
 
-            {/* WISHLIST */}
-            <NavLink
-              to="/wishlist"
-              className="relative group"
-            >
-
+            <NavLink to="/wishlist" className="relative group">
               <Heart className="text-slate-600 group-hover:text-red-500 transition" />
 
               <span
@@ -236,20 +148,13 @@ export default function Navbar() {
               </span>
 
               {wishlistCount > 0 && (
-
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
-
                   {wishlistCount}
-
                 </span>
-
               )}
-
             </NavLink>
 
-            {/* SELL BUTTON */}
             {isLoggedIn && (
-
               <button
                 onClick={sellerClick}
                 className="
@@ -260,44 +165,25 @@ export default function Navbar() {
               >
                 Sell
               </button>
-
             )}
-
           </div>
 
-          {/* RIGHT SIDE */}
           <div className="hidden md:flex items-center gap-3">
-
             {isLoggedIn ? (
-
               <>
-
-                <NavLink
-                  to="/userProfile"
-                  className="flex items-center gap-2"
-                >
-
+                <NavLink to="/userProfile" className="flex items-center gap-2">
                   {user?.image ? (
-
                     <img
                       src={`http://localhost:5000/uploads/${user.image}`}
+                      alt="profile"
                       className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) =>
-                        (e.target.src =
-                          "/default-avatar.png")
-                      }
+                      onError={(e) => (e.target.src = "/default-avatar.png")}
                     />
-
                   ) : (
-
                     <User size={18} />
-
                   )}
 
-                  <span>
-                    {user?.name}
-                  </span>
-
+                  <span>{user?.name}</span>
                 </NavLink>
 
                 <button
@@ -308,15 +194,10 @@ export default function Navbar() {
                     hover:bg-slate-700
                   "
                 >
-
                   <LogOut size={16} />
-
                 </button>
-
               </>
-
             ) : (
-
               <NavLink
                 to="/login"
                 className="
@@ -327,75 +208,45 @@ export default function Navbar() {
               >
                 Login
               </NavLink>
-
             )}
-
           </div>
 
-          {/* MOBILE MENU BUTTON */}
-          <button
-            className="md:hidden"
-            onClick={() =>
-              setIsOpen(!isOpen)
-            }
-          >
-
+          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X /> : <Menu />}
-
           </button>
-
         </div>
-
       </div>
 
-      {/* MOBILE MENU */}
       {isOpen && (
-
         <div className="md:hidden bg-white p-4 space-y-4 border-t shadow">
-
           {navLinks.map((link) => (
-
             <NavLink
               key={link.name}
               to={link.path}
-              onClick={() =>
-                setIsOpen(false)
-              }
+              onClick={() => setIsOpen(false)}
               className="block text-slate-700"
             >
-
               {link.name}
-
             </NavLink>
-
           ))}
 
           <NavLink
             to="/wishlist"
-            onClick={() =>
-              setIsOpen(false)
-            }
+            onClick={() => setIsOpen(false)}
             className="
               flex items-center gap-2
               text-slate-700
             "
           >
-
             <Heart />
-
             Wishlist ({wishlistCount})
-
           </NavLink>
 
           {isLoggedIn && (
-
             <button
               onClick={() => {
-
                 sellerClick();
-
                 setIsOpen(false);
-
               }}
               className="
                 w-full bg-slate-800
@@ -404,13 +255,67 @@ export default function Navbar() {
             >
               Sell
             </button>
-
           )}
 
+          {isLoggedIn ? (
+            <div className="border-t pt-4 space-y-4">
+              <NavLink
+                to="/userProfile"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3"
+              >
+                {user?.image ? (
+                  <img
+                    src={`http://localhost:5000/uploads/${user.image}`}
+                    alt="profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => (e.target.src = "/default-avatar.png")}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User size={18} />
+                  </div>
+                )}
+
+                <div>
+                  <p className="font-medium">{user?.name}</p>
+
+                  <p className="text-xs text-gray-500">View Profile</p>
+                </div>
+              </NavLink>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="
+                  w-full flex items-center justify-center gap-2
+                  bg-red-500 text-white
+                  py-2 rounded-lg
+                  hover:bg-red-600
+                "
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <NavLink
+              to="/login"
+              onClick={() => setIsOpen(false)}
+              className="
+                block text-center
+                bg-slate-900 text-white
+                py-2 rounded-lg
+                hover:bg-slate-700
+              "
+            >
+              Login
+            </NavLink>
+          )}
         </div>
-
       )}
-
     </nav>
   );
 }

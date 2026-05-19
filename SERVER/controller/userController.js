@@ -42,19 +42,53 @@ exports.requestPet = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.getUserRequests = async (req, res) => {
   try {
-    const requests = await Request.find({ buyer: req.user._id })
-      .populate("pet")
-      .populate("seller", "name email");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 4;
+    const skip = (page - 1) * limit;
 
-    res.json({ requests });
+    const requests = await Request.find({
+      buyer: req.user._id,
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const petIds = requests.map((r) => r.pet);
+
+    const pets = await Pet.find({
+      _id: { $in: petIds },
+    }).lean();
+
+    const petMap = new Map();
+    pets.forEach((p) => petMap.set(String(p._id), p));
+
+    const enriched = requests.map((r) => {
+      const pet = petMap.get(String(r.pet));
+
+      return {
+        ...r,
+        pet,
+        isSold: r.status === "sold" || pet?.status === "sold",
+      };
+    });
+
+    const totalRequests = await Request.countDocuments({
+      buyer: req.user._id,
+    });
+
+    res.json({
+      requests: enriched,
+      currentPage: page,
+      totalPages: Math.ceil(totalRequests / limit),
+      totalRequests,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.submitFeedback = async (req, res) => {
   try {
     const { petId, sellerId, rating, comment } = req.body;

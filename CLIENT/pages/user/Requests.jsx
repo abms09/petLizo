@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function UserRequests() {
   const [requests, setRequests] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -15,22 +14,29 @@ export default function UserRequests() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [paymentLoading, setPaymentLoading] = useState(null);
 
   const navigate = useNavigate();
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (page) => {
     try {
+      setLoading(true);
+
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/user/requests", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `http://localhost:5000/user/requests?page=${page}&limit=4`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
-      const valid = res.data.requests.filter((r) => r.pet);
+      const data = res.data;
 
-      setRequests(valid);
-      setFiltered(valid);
+      setRequests(data.requests || []);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -39,36 +45,26 @@ export default function UserRequests() {
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    fetchRequests(currentPage);
+  }, [currentPage]);
 
   useEffect(() => {
-    let data = [...requests];
-
-    if (search) {
-      data = data.filter(
-        (r) =>
-          r.pet?.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.seller?.name?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    if (statusFilter !== "all") {
-      data = data.filter((r) => r.status === statusFilter);
-    }
-
-    setFiltered(data);
     setCurrentPage(1);
-  }, [search, statusFilter, requests]);
+  }, [search, statusFilter]);
 
-  const indexOfLast = currentPage * itemsPerPage;
-  const indexOfFirst = indexOfLast - itemsPerPage;
-  const currentRequests = filtered.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const filtered = requests.filter((r) => {
+    const matchSearch =
+      r.pet?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.seller?.name?.toLowerCase().includes(search.toLowerCase());
 
-  const openFeedbackModal = (req) => {
-    setSelectedRequest(req);
-  };
+    const matchStatus = statusFilter === "all" || r.status === statusFilter;
+
+    return matchSearch && matchStatus;
+  });
+
+  const isFiltering = search.trim() !== "" || statusFilter !== "all";
+
+  const openFeedbackModal = (req) => setSelectedRequest(req);
 
   const closeModal = () => {
     setSelectedRequest(null);
@@ -80,78 +76,117 @@ export default function UserRequests() {
     try {
       const token = localStorage.getItem("token");
 
+      const petId = selectedRequest?.pet?._id || selectedRequest?.pet;
+
+      const sellerId = selectedRequest?.seller?._id || selectedRequest?.seller;
+
+      console.log("PET ID:", petId);
+      console.log("SELLER ID:", sellerId);
+
       await axios.post(
         "http://localhost:5000/user/feedback",
         {
-          petId: selectedRequest.pet._id,
-          sellerId: selectedRequest.seller._id,
+          petId,
+          sellerId,
           rating,
           comment,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
 
       alert("Feedback submitted ✅");
+
       closeModal();
     } catch (err) {
       console.error(err);
+
       alert(err.response?.data?.message || "Failed to submit feedback");
     }
   };
-const openChat = (req) => {
 
-  const currentUser = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const openChat = (req) => {
+    const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  const currentUserId =
-    currentUser?._id || currentUser?.id;
+    const currentUserId = currentUser?._id || currentUser?.id;
+    const sellerId = req?.seller?._id || req?.seller;
+    const buyerId = req?.buyer?._id || req?.buyer;
 
-  // seller can be object OR string
-  const sellerId =
-    req?.seller?._id || req?.seller;
+    const otherUserId = sellerId === currentUserId ? buyerId : sellerId;
 
-  // buyer can be object OR string
-  const buyerId =
-    req?.buyer?._id || req?.buyer;
+    if (!otherUserId) return alert("Chat user not found");
 
-  let otherUserId;
+    navigate(`/chat/${otherUserId}`);
+  };
 
-  // seller logged in
-  if (sellerId === currentUserId) {
+  const handlePayment = async (req) => {
+    try {
+      setPaymentLoading(req._id);
 
-    otherUserId = buyerId;
+      const token = localStorage.getItem("token");
 
-  } else {
+      const res = await axios.post(
+        "http://localhost:5000/payment/create-order",
+        { requestId: req._id },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-    // buyer logged in
-    otherUserId = sellerId;
-  }
+      const { order, key } = res.data;
 
-  console.log("SELLER ID:", sellerId);
-  console.log("BUYER ID:", buyerId);
-  console.log("CURRENT USER:", currentUserId);
-  console.log("OTHER USER:", otherUserId);
+      const options = {
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "PetMart",
+        description: `Advance payment for ${req.pet?.name}`,
+        order_id: order.id,
 
-  if (!otherUserId) {
+        handler: async function (response) {
+          try {
+            await axios.post(
+              "http://localhost:5000/payment/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                requestId: req._id,
+              },
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
 
-    alert("Chat user not found");
+            alert("Payment successful 🎉");
+            fetchRequests(currentPage);
+          } catch (err) {
+            console.error(err);
+            alert("Payment verification failed");
+          }
+        },
 
-    return;
-  }
+        prefill: {
+          name: JSON.parse(localStorage.getItem("user"))?.name || "",
+          email: JSON.parse(localStorage.getItem("user"))?.email || "",
+        },
 
-  navigate(`/chat/${otherUserId}`);
-};
+        theme: { color: "#16a34a" },
+      };
 
-  if (loading) {
-    return <p className="text-center py-20">Loading...</p>;
-  }
+      new window.Razorpay(options).open();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Payment failed");
+    } finally {
+      setPaymentLoading(null);
+    }
+  };
+
+  if (loading) return <p className="text-center py-20">Loading...</p>;
 
   return (
     <div className="bg-white dark:bg-slate-950 min-h-screen px-4 sm:px-6 py-6">
-      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-slate-900 dark:text-white">
         My Requests
       </h1>
 
@@ -159,17 +194,13 @@ const openChat = (req) => {
         <input
           type="text"
           placeholder="Search..."
-          className="border px-4 py-2 rounded-lg w-full sm:w-64 
-                   dark:bg-slate-800 dark:text-white outline-none
-                   focus:ring-2 focus:ring-slate-400"
+          className="border px-4 py-2 rounded-lg w-full sm:w-64 dark:bg-slate-800 dark:text-white"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select
-          className="border px-4 py-2 rounded-lg w-full sm:w-48
-                   dark:bg-slate-800 dark:text-white outline-none
-                   focus:ring-2 focus:ring-slate-400"
+          className="border px-4 py-2 rounded-lg w-full sm:w-48 dark:bg-slate-800 dark:text-white"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -181,17 +212,25 @@ const openChat = (req) => {
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {currentRequests.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-20">
             No requests found 🐾
           </div>
         ) : (
-          currentRequests.map((req) => {
+          filtered.map((req) => {
+            const isSold = req.pet?.status === "sold";
+
+            const isBooked =
+              req.pet?.status === "booked" || req.paymentStatus === "partial";
+
+            const isAdvancePaid = req.paymentStatus === "partial" && !isSold;
+
             let imageUrl = "/no-image.png";
 
-            if (req.pet?.image?.length) {
-              let img = req.pet.image[0].replace(/\\/g, "/");
-              imageUrl = img.startsWith("http")
+            if (req.pet?.image?.length > 0) {
+              let img = req.pet.image[0]?.replace(/\\/g, "/");
+
+              imageUrl = img?.startsWith("http")
                 ? img
                 : `http://localhost:5000/uploads/${img}`;
             }
@@ -199,18 +238,21 @@ const openChat = (req) => {
             return (
               <div
                 key={req._id}
-                className="bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300"
+                className="bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition"
               >
                 <div className="aspect-4/3 overflow-hidden">
                   <img
                     src={imageUrl}
                     alt="pet"
-                    className="w-full h-full object-cover hover:scale-105 transition duration-500"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "/no-image.png";
+                    }}
                   />
                 </div>
 
                 <div className="p-4 space-y-2">
-                  <h2 className="font-semibold text-lg truncate">
+                  <h2 className="font-semibold text-lg truncate text-white">
                     {req.pet?.name}
                   </h2>
 
@@ -220,57 +262,55 @@ const openChat = (req) => {
                     Seller: {req.seller?.name}
                   </p>
 
-                  <span
-                    className={`inline-block px-3 py-1 text-xs rounded-full font-medium
-                  ${
-                    req.status === "approved"
-                      ? "bg-green-100 text-green-700"
-                      : req.status === "pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-red-100 text-red-700"
-                  }`}
-                  >
+                  <span className="px-3 py-1 text-xs rounded-full font-medium bg-gray-200">
                     {req.status}
                   </span>
 
                   <div className="pt-3 space-y-2">
-                    {req.pet?.status === "sold" ? (
-                      <button
-                        onClick={() => openFeedbackModal(req)}
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm"
-                      >
-                        ⭐ Give Feedback
-                      </button>
-                    ) : req.status === "pending" ? (
-                      <button
-                        disabled
-                        className="w-full bg-yellow-400 py-2 rounded-lg text-sm"
-                      >
-                        Waiting
-                      </button>
-                    ) : req.status === "rejected" ? (
-                      <button
-                        disabled
-                        className="w-full bg-red-400 py-2 rounded-lg text-sm"
-                      >
-                        Rejected
-                      </button>
-                    ) : (
+                    {isSold ? (
                       <>
                         <button
-                          disabled
-                          className="w-full bg-green-400 py-2 rounded-lg text-sm"
+                          onClick={() => openFeedbackModal(req)}
+                          className="w-full bg-slate-900 text-white py-2.5 rounded-xl"
                         >
-                          Approved
+                          ⭐ Rate Experience
                         </button>
 
                         <button
                           onClick={() => openChat(req)}
-                          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                          className="w-full bg-blue-600 text-white py-2.5 rounded-xl"
                         >
-                          💬 Chat with Seller
+                          💬 Contact Seller
                         </button>
                       </>
+                    ) : isBooked ? (
+                      <button
+                        disabled
+                        className="w-full bg-green-500 text-white py-2.5 rounded-xl"
+                      >
+                        💰 Advance Paid (Waiting Final Payment)
+                      </button>
+                    ) : req.status === "pending" ? (
+                      <button
+                        disabled
+                        className="w-full bg-yellow-400 text-white py-2.5 rounded-xl"
+                      >
+                        ⏳ Waiting Approval
+                      </button>
+                    ) : req.status === "rejected" ? (
+                      <button
+                        disabled
+                        className="w-full bg-red-400 text-white py-2.5 rounded-xl"
+                      >
+                        ❌ Rejected
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handlePayment(req)}
+                        className="w-full bg-green-600 text-white py-2.5 rounded-xl"
+                      >
+                        💳 Pay Advance
+                      </button>
                     )}
                   </div>
                 </div>
@@ -280,84 +320,104 @@ const openChat = (req) => {
         )}
       </div>
 
-      {selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
-            <button
-              onClick={closeModal}
-              className="absolute top-3 right-3 text-gray-400 text-lg"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-xl font-bold text-center mb-4">
-              ⭐ Rate Your Experience
-            </h2>
-
-            <div className="flex justify-center gap-2 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`cursor-pointer text-2xl ${
-                    rating >= star ? "text-yellow-400" : "text-gray-300"
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full border rounded-lg p-3 mb-4 dark:bg-slate-800"
-              rows={3}
-              placeholder="Write your feedback..."
-            />
-
-            <button
-              onClick={submitFeedback}
-              disabled={!rating}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Submit Feedback
-            </button>
-          </div>
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex justify-center flex-wrap gap-2 mt-8">
-          <button
-            onClick={() => setCurrentPage((p) => p - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-800 disabled:opacity-50"
-          >
-            Prev
-          </button>
-
+      {!isFiltering && totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-8">
           {[...Array(totalPages)].map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
               className={`px-3 py-1 rounded ${
-                currentPage === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:bg-slate-800"
+                currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
               }`}
             >
               {i + 1}
             </button>
           ))}
+        </div>
+      )}
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                Rate Your Experience
+              </h2>
 
-          <button
-            onClick={() => setCurrentPage((p) => p + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded bg-gray-200 dark:bg-slate-800 disabled:opacity-50"
-          >
-            Next
-          </button>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-red-500 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Pet</p>
+
+                <h3 className="font-semibold text-lg text-slate-800 dark:text-white">
+                  {selectedRequest.pet?.name}
+                </h3>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Seller</p>
+
+                <h3 className="font-semibold text-slate-800 dark:text-white">
+                  {selectedRequest.seller?.name}
+                </h3>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Rating</p>
+
+                <div className="flex gap-2 text-3xl">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className={`transition ${
+                        rating >= star
+                          ? "text-yellow-400 scale-110"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Comment</p>
+
+                <textarea
+                  rows="4"
+                  placeholder="Write your feedback..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full border rounded-xl p-3 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={closeModal}
+                  className="flex-1 border border-gray-300 py-2.5 rounded-xl"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={submitFeedback}
+                  disabled={rating === 0}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-2.5 rounded-xl"
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import SellerNavbar from "./SellerNavbar";
 
 export default function SellerLayout() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-900">
       <div className="hidden md:block w-64">
         <Sidebar />
       </div>

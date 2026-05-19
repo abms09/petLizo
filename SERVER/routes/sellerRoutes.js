@@ -21,6 +21,7 @@ const {
   approveRequest,
   rejectRequest,
   markAsSold,
+  getSellerPayments,
 } = require("../controller/sellerController");
 
 router.post(
@@ -58,8 +59,14 @@ router.delete(
   authorizeRoles("seller"),
   deletePet,
 );
+router.get(
+  "/payments",
+  authMiddleware,
+  authorizeRoles("seller"),
+  getSellerPayments,
+);
 
-router.get("/soldpets", authMiddleware, authorizeRoles("seller"), getSoldPets);
+router.get("/sold-pets", authMiddleware, authorizeRoles("seller"), getSoldPets);
 router.get("/feedbacks", authMiddleware, authorizeRoles("seller"), getFeedback);
 
 router.get("/profile", authMiddleware, getSellerProfile);

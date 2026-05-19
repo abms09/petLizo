@@ -5,32 +5,53 @@ import ImageSlider from "../../components/ImageSlider";
 
 export default function Pets() {
   const [pets, setPets] = useState([]);
-  const [filtered, setFiltered] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState("all");
+
   const [approvalFilter, setApprovalFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+
+  const [totalPages, setTotalPages] = useState(1);
+
+  const itemsPerPage = 8;
 
   const navigate = useNavigate();
 
-  const fetchPets = async () => {
+  const fetchPets = async (
+    page = currentPage,
+    searchValue = search,
+    statusValue = statusFilter,
+    approvalValue = approvalFilter,
+  ) => {
     try {
+      setLoading(true);
+
       const token = localStorage.getItem("token");
 
       const res = await axios.get("http://localhost:5000/admin/pets", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+
+        params: {
+          page,
+          limit: itemsPerPage,
+          search: searchValue,
+          status: statusValue,
+          approval: approvalValue,
+        },
       });
 
-      const data = Array.isArray(res.data) ? res.data : res.data.pets || [];
+      setPets(res.data.pets || []);
 
-      setPets(data);
-      setFiltered(data);
-      setCurrentPage(1);
+      setCurrentPage(res.data.currentPage || 1);
+
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
       console.error(err);
 
@@ -38,8 +59,6 @@ export default function Pets() {
         localStorage.clear();
         navigate("/login");
       }
-
-      setPets([]);
     } finally {
       setLoading(false);
     }
@@ -53,43 +72,16 @@ export default function Pets() {
       return;
     }
 
-    fetchPets();
+    fetchPets(1);
   }, []);
 
   useEffect(() => {
-    let data = [...pets];
+    const delay = setTimeout(() => {
+      fetchPets(1);
+    }, 400);
 
-    if (search) {
-      data = data.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(search.toLowerCase()) ||
-          p.category?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    if (statusFilter !== "all") {
-      data = data.filter((p) =>
-        statusFilter === "sold" ? p.isSold : !p.isSold,
-      );
-    }
-
-    if (approvalFilter !== "all") {
-      data = data.filter((p) => {
-        if (approvalFilter === "pending") {
-          return !p.approved || p.approved === "pending";
-        }
-        return p.approved === approvalFilter;
-      });
-    }
-
-    setFiltered(data);
-    setCurrentPage(1);
-  }, [search, statusFilter, approvalFilter, pets]);
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-  const indexOfLast = currentPage * itemsPerPage;
-  const currentPets = filtered.slice(indexOfLast - itemsPerPage, indexOfLast);
+    return () => clearTimeout(delay);
+  }, [search, statusFilter, approvalFilter]);
 
   const handleApprove = async (id) => {
     try {
@@ -102,7 +94,8 @@ export default function Pets() {
           },
         },
       );
-      fetchPets();
+
+      fetchPets(currentPage);
     } catch (err) {
       console.error(err);
     }
@@ -119,17 +112,23 @@ export default function Pets() {
           },
         },
       );
-      fetchPets();
+
+      fetchPets(currentPage);
     } catch (err) {
       console.error(err);
     }
   };
+
+  if (loading) {
+    return <p className="text-center py-20">Loading pets...</p>;
+  }
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Pet Management</h2>
+
           <p className="text-sm text-gray-500">
             Manage listings, approvals and sales
           </p>
@@ -152,7 +151,9 @@ export default function Pets() {
             className="px-3 py-2 border rounded-lg w-full"
           >
             <option value="all">All Status</option>
+
             <option value="available">Available</option>
+
             <option value="sold">Sold</option>
           </select>
 
@@ -162,16 +163,23 @@ export default function Pets() {
             className="px-3 py-2 border rounded-lg w-full"
           >
             <option value="all">All Approval</option>
+
             <option value="approved">Approved</option>
-            <option value="pending">Unapproved</option>
+
+            <option value="pending">Pending</option>
+
             <option value="rejected">Rejected</option>
           </select>
 
           <button
             onClick={() => {
               setSearch("");
+
               setStatusFilter("all");
+
               setApprovalFilter("all");
+
+              fetchPets(1, "", "all", "all");
             }}
             className="bg-gray-100 hover:bg-gray-200 text-sm rounded-lg px-3 py-2"
           >
@@ -180,15 +188,13 @@ export default function Pets() {
         </div>
       </div>
 
-      {loading ? (
-        <p className="text-center text-gray-500">Loading pets...</p>
-      ) : currentPets.length === 0 ? (
+      {pets.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-gray-400 text-lg">🐾 No pets found</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {currentPets.map((pet) => (
+          {pets.map((pet) => (
             <div
               key={pet._id}
               className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition overflow-hidden"
@@ -266,7 +272,7 @@ export default function Pets() {
       {totalPages > 1 && (
         <div className="flex flex-wrap justify-center items-center mt-10 gap-2">
           <button
-            onClick={() => setCurrentPage((p) => p - 1)}
+            onClick={() => fetchPets(currentPage - 1)}
             disabled={currentPage === 1}
             className="px-4 py-1.5 bg-gray-200 rounded-lg disabled:opacity-50"
           >
@@ -276,7 +282,7 @@ export default function Pets() {
           {[...Array(totalPages)].map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrentPage(i + 1)}
+              onClick={() => fetchPets(i + 1)}
               className={`px-4 py-1.5 rounded-lg text-sm ${
                 currentPage === i + 1
                   ? "bg-slate-800 text-white"
@@ -288,7 +294,7 @@ export default function Pets() {
           ))}
 
           <button
-            onClick={() => setCurrentPage((p) => p + 1)}
+            onClick={() => fetchPets(currentPage + 1)}
             disabled={currentPage === totalPages}
             className="px-4 py-1.5 bg-gray-200 rounded-lg disabled:opacity-50"
           >

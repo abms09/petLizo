@@ -8,6 +8,9 @@ import {
   ClipboardList,
   ShoppingCart,
   User,
+  Menu,
+  X,
+  Wallet,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -18,7 +21,7 @@ export default function Sidebar({ mobile }) {
   const [open, setOpen] = useState(false);
 
   const linkClass =
-    "flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200";
+    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200";
 
   const activeClass = "bg-slate-800 text-white";
   const inactiveClass = "text-slate-300 hover:bg-slate-800 hover:text-white";
@@ -29,7 +32,9 @@ export default function Sidebar({ mobile }) {
       if (!token) return;
 
       const res = await axios.get("http://localhost:5000/seller/requests", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       setRequests(res.data.requests || []);
@@ -40,7 +45,9 @@ export default function Sidebar({ mobile }) {
 
   useEffect(() => {
     fetchRequests();
+
     const interval = setInterval(fetchRequests, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -48,7 +55,7 @@ export default function Sidebar({ mobile }) {
     (r) => r.status?.toLowerCase() === "pending",
   ).length;
 
-  const Menu = () => (
+  const MenuItems = () => (
     <>
       <NavLink
         to="/seller"
@@ -61,7 +68,6 @@ export default function Sidebar({ mobile }) {
         <LayoutDashboard size={18} />
         Dashboard
       </NavLink>
-
 
       <NavLink
         to="/seller/mypets"
@@ -104,7 +110,7 @@ export default function Sidebar({ mobile }) {
       </NavLink>
 
       <NavLink
-        to="/seller/sold"
+        to="/seller/sold-pet"
         className={({ isActive }) =>
           `${linkClass} ${isActive ? activeClass : inactiveClass}`
         }
@@ -125,7 +131,19 @@ export default function Sidebar({ mobile }) {
         Feedbacks
       </NavLink>
 
+      <NavLink
+        to="/seller/payments"
+        className={({ isActive }) =>
+          `${linkClass} ${isActive ? activeClass : inactiveClass}`
+        }
+        onClick={() => setOpen(false)}
+      >
+        <Wallet size={18} />
+        Payments
+      </NavLink>
+
       <div className="border-t border-slate-700 my-3" />
+
       <NavLink
         to="/"
         className={({ isActive }) =>
@@ -136,6 +154,7 @@ export default function Sidebar({ mobile }) {
         <ShoppingCart size={18} />
         Buy Pets
       </NavLink>
+
       <NavLink
         to="/seller/profile"
         className={({ isActive }) =>
@@ -152,29 +171,40 @@ export default function Sidebar({ mobile }) {
   if (mobile) {
     return (
       <>
-        <button onClick={() => setOpen(true)}>☰</button>
+        <button
+          onClick={() => setOpen(true)}
+          className="p-2 rounded-lg bg-slate-900 text-white"
+        >
+          <Menu size={20} />
+        </button>
 
-        <div className={`fixed inset-0 z-50 ${open ? "visible" : "invisible"}`}>
+        <div
+          className={`fixed inset-0 z-50 transition ${
+            open ? "visible" : "invisible"
+          }`}
+        >
           <div
             onClick={() => setOpen(false)}
-            className={`absolute inset-0 bg-black transition ${
-              open ? "opacity-40" : "opacity-0"
+            className={`absolute inset-0 bg-black/50 transition-opacity ${
+              open ? "opacity-100" : "opacity-0"
             }`}
           />
 
           <div
-            className={`absolute left-0 top-0 h-full w-64 bg-slate-900 text-white p-4 transform transition ${
+            className={`absolute left-0 top-0 h-full w-72 bg-slate-900 text-white transform transition-transform duration-300 flex flex-col ${
               open ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <button
-              onClick={() => setOpen(false)}
-              className="mb-4 w-full text-right text-lg"
-            >
-              ✕
-            </button>
+            <div className="flex items-center justify-between p-5 border-b border-slate-700">
+              <h2 className="text-xl font-semibold">Seller Panel</h2>
+              <button onClick={() => setOpen(false)}>
+                <X size={22} />
+              </button>
+            </div>
 
-            <Menu />
+            <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+              <MenuItems />
+            </nav>
           </div>
         </div>
       </>
@@ -182,18 +212,18 @@ export default function Sidebar({ mobile }) {
   }
 
   return (
-    <div className="w-64 h-screen bg-slate-900 text-white flex flex-col shadow-lg">
+    <aside className="w-64 min-h-screen sticky top-0 bg-slate-900 text-white flex flex-col shadow-xl">
       <div className="p-5 text-2xl font-semibold border-b border-slate-700">
         🐾 Seller Panel
       </div>
 
-      <nav className="p-4 space-y-2 flex-1">
-        <Menu />
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        <MenuItems />
       </nav>
 
       <div className="p-4 border-t border-slate-700 text-sm text-slate-400">
         © 2026 Pet Adoption
       </div>
-    </div>
+    </aside>
   );
 }

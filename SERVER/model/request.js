@@ -19,8 +19,21 @@ const requestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "sold"],
       default: "pending",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["none", "partial", "completed"],
+      default: "none",
+    },
+    paymentId: {
+      type: String,
+    },
+
+    advancePaidAt: {
+      type: Date,
     },
   },
   { timestamps: true },

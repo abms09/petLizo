@@ -13,11 +13,12 @@ import Layout from "../pages/admin/Layout";
 import Users from "../pages/admin/Users";
 import Sellers from "../pages/admin/Sellers";
 import Pets from "../pages/admin/Pets";
-import SoldPets from "../pages/admin/SoldPets";
+import AdminSoldPets from "../pages/admin/SoldPets";
 import Feedbacks from "../pages/admin/Feedbacks";
 import Complaints from "../pages/admin/Complaints";
 import Dashboard from "../pages/admin/AdminDashboard";
 import ContactMessages from "../pages/admin/ContactMessages";
+import AdminReports from "../pages/admin/AdminReports";
 
 // Auth
 import Signup from "../components/Signup";
@@ -34,6 +35,7 @@ import SellerLayout from "../pages/seller/Layout";
 import SellerFeedback from "../pages/seller/SellerFeedback";
 import SellerProfile from "../pages/seller/SellerProfile";
 import SellerRequests from "../pages/seller/SellerRequests";
+import SellerSoldPets from "../pages/seller/SoldPets";
 
 // User
 import UserLayout from "../pages/user/UserLayout";
@@ -48,6 +50,7 @@ import UserRequests from "../pages/user/Requests";
 import UserProfile from "../pages/user/UserProfile";
 import Chat from "../components/Chat";
 import Wishlist from "../pages/user/WishList";
+import SellerPayments from "../pages/seller/sellerPayments";
 
 function AppWrapper() {
   return (
@@ -103,10 +106,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-     <Route
-  path="/chat/:otherUserId"
-  element={<Chat />}
-/>
+        <Route path="/chat/:otherUserId" element={<Chat />} />
 
         {/* admin */}
         <Route
@@ -122,10 +122,11 @@ function App() {
           <Route path="users" element={<Users />} />
           <Route path="sellers" element={<Sellers />} />
           <Route path="pets" element={<Pets />} />
-          <Route path="sold" element={<SoldPets />} />
+          <Route path="sold" element={<AdminSoldPets />} />
           <Route path="feedbacks" element={<Feedbacks />} />
           <Route path="complaints" element={<Complaints />} />
           <Route path="messages" element={<ContactMessages />} />
+          <Route path="reports" element={<AdminReports />} />
         </Route>
 
         {/* seller */}
@@ -140,11 +141,12 @@ function App() {
           <Route index element={<SellerDashboard />} />
           <Route path="mypets" element={<MyPets />} />
           <Route path="addpet" element={<AddPet />} />
-          <Route path="sold" element={<SoldPets />} />
+          <Route path="sold-pet" element={<SellerSoldPets />} />
           <Route path="edit-pet" element={<EditPet />} />
           <Route path="sellerFeedback" element={<SellerFeedback />} />
           <Route path="profile" element={<SellerProfile />} />
           <Route path="requests" element={<SellerRequests />} />
+          <Route path="payments" element={<SellerPayments />} />
         </Route>
 
         {/* user */}

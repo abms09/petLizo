@@ -10,6 +10,7 @@ const menu = [
   { name: "Sold Pets", path: "/admin/sold" },
   { name: "Feedbacks", path: "/admin/feedbacks", key: "feedbacks" },
   { name: "Messages", path: "/admin/messages", key: "messages" },
+  { name: "Reports", path: "/admin/reports", icon: "📄" },
 ];
 
 export default function Sidebar({ mobile = false }) {
@@ -101,7 +102,7 @@ export default function Sidebar({ mobile = false }) {
   }
 
   return (
-    <div className="h-screen bg-slate-900 text-white flex flex-col">
+    <div className="sticky top-0 left-0 h-screen bg-slate-900 text-white flex flex-col overflow-y-auto">
       <div className="p-4 text-xl font-bold border-b border-slate-700">
         🐾 Admin Panel
       </div>

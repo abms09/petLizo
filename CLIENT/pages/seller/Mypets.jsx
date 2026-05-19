@@ -5,7 +5,6 @@ import ImageSlider from "../../components/ImageSlider";
 
 export default function MyPets() {
   const [pets, setPets] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingPet, setEditingPet] = useState(null);
   const [error, setError] = useState("");
@@ -15,13 +14,15 @@ export default function MyPets() {
   const [statusFilter, setStatusFilter] = useState("available");
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const itemsPerPage = 6;
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchPets();
-  }, []);
+  }, [currentPage, search, categoryFilter, statusFilter]);
 
   useEffect(() => {
     document.body.style.overflow = editingPet ? "hidden" : "auto";
@@ -37,42 +38,41 @@ export default function MyPets() {
         return;
       }
 
+      const token = localStorage.getItem("token");
+
       const res = await axios.get("http://localhost:5000/seller/mypets", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
+        },
+
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search,
+          category: categoryFilter,
+          status: statusFilter,
         },
       });
 
-      const data = Array.isArray(res.data) ? res.data : res.data.pets || [];
+      setPets(res.data.pets || []);
 
-      setPets(data);
-      setFiltered(data);
-      setCurrentPage(1);
+      setCurrentPage(res.data.currentPage || 1);
+
+      setTotalPages(res.data.totalPages || 1);
     } catch (err) {
+      console.log(err);
+
       setError("Failed to load pets");
+
       setPets([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const markAsSold = async (id) => {
-    try {
-      await axios.put(
-        `http://localhost:5000/pets/sold/${id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-      fetchPets();
-    } catch (err) {
-      console.log(err);
-      alert("Failed to mark as sold");
-    }
-  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, statusFilter]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this pet?")) return;
@@ -84,7 +84,7 @@ export default function MyPets() {
         },
       });
 
-      setPets((prev) => prev.filter((p) => p._id !== id));
+      fetchPets();
     } catch {
       alert("Delete failed");
     }
@@ -94,42 +94,13 @@ export default function MyPets() {
     setEditingPet(pet);
   };
 
-  useEffect(() => {
-    let data = [...pets];
+  if (loading) {
+    return <p className="text-center py-20">Loading...</p>;
+  }
 
-    if (statusFilter !== "all") {
-      data = data.filter((p) => p.status?.toLowerCase() === statusFilter);
-    }
-
-    if (search) {
-      data = data.filter((p) =>
-        p.name?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    if (categoryFilter !== "all") {
-      data = data.filter((p) => p.category?.toLowerCase() === categoryFilter);
-    }
-
-    setFiltered(data);
-    setCurrentPage(1);
-  }, [search, categoryFilter, statusFilter, pets]);
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-  const currentPets = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [filtered]);
-
-  if (loading) return <p className="text-center py-20">Loading...</p>;
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
+  if (error) {
+    return <p className="text-red-500 text-center py-20">{error}</p>;
+  }
 
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
@@ -152,8 +123,11 @@ export default function MyPets() {
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
           <option value="all">All Categories</option>
+
           <option value="dog">Dog</option>
+
           <option value="cat">Cat</option>
+
           <option value="bird">Bird</option>
         </select>
 
@@ -163,7 +137,9 @@ export default function MyPets() {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="available">Available</option>
+
           <option value="sold">Sold</option>
+
           <option value="all">All</option>
         </select>
       </div>
@@ -173,13 +149,14 @@ export default function MyPets() {
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setEditingPet(null)}
-          ></div>
+          />
 
           <div className="relative z-10 w-full max-w-lg">
             <EditPet
               pet={editingPet}
               onUpdated={() => {
                 setEditingPet(null);
+
                 fetchPets();
               }}
             />
@@ -187,11 +164,11 @@ export default function MyPets() {
         </div>
       )}
 
-      {currentPets.length === 0 ? (
+      {pets.length === 0 ? (
         <p className="text-center text-gray-500">No pets found</p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {currentPets.map((pet) => (
+          {pets.map((pet) => (
             <div
               key={pet._id}
               className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition relative ${
@@ -238,15 +215,6 @@ export default function MyPets() {
                   >
                     Delete
                   </button>
-
-                  {pet.status?.toLowerCase() !== "sold" && (
-                    <button
-                      onClick={() => markAsSold(pet._id)}
-                      className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm"
-                    >
-                      Sold
-                    </button>
-                  )}
                 </div>
               </div>
             </div>

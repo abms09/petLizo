@@ -9,11 +9,22 @@ export default function PetDetails() {
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [alreadyRequested, setAlreadyRequested] = useState(false);
+
   useEffect(() => {
     const fetchPet = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/pets/${id}`);
+
         setPet(res.data.pet);
+
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        const userId = user?._id || user?.id;
+
+        if (res.data.pet?.requests?.includes(userId)) {
+          setAlreadyRequested(true);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -32,23 +43,27 @@ export default function PetDetails() {
         `http://localhost:5000/user/request-pet/${petId}`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
 
       alert("Request sent successfully");
 
-      setPet((prev) => ({
-        ...prev,
-        status: "pending",
-      }));
+      setAlreadyRequested(true);
     } catch (err) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Request failed");
     }
   };
 
-  if (loading) return <p className="text-center py-20">Loading...</p>;
-  if (!pet) return <p className="text-center py-20">Pet not found</p>;
+  if (loading) {
+    return <p className="text-center py-20">Loading...</p>;
+  }
+
+  if (!pet) {
+    return <p className="text-center py-20">Pet not found</p>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-10 grid md:grid-cols-2 gap-8 md:gap-10">
@@ -60,15 +75,15 @@ export default function PetDetails() {
         <h1 className="text-2xl md:text-3xl font-bold">{pet.name}</h1>
 
         <div className="flex flex-wrap gap-2">
-          {pet.status === "pending" && (
-            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 text-xs md:text-sm rounded-full">
-              ⏳ Request Pending
-            </span>
-          )}
-
           {pet.status === "sold" && (
             <span className="bg-red-100 text-red-700 px-3 py-1 text-xs md:text-sm rounded-full">
               ❌ Sold
+            </span>
+          )}
+
+          {alreadyRequested && pet.status !== "sold" && (
+            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 text-xs md:text-sm rounded-full">
+              ⏳ Requested
             </span>
           )}
         </div>
@@ -77,6 +92,7 @@ export default function PetDetails() {
           <p>
             <span className="font-medium">Breed:</span> {pet.breed || "N/A"}
           </p>
+
           <p>
             <span className="font-medium">Age:</span> {pet.age || "N/A"}
           </p>
@@ -84,6 +100,7 @@ export default function PetDetails() {
           <p>
             <span className="font-medium">Gender:</span> {pet.gender || "N/A"}
           </p>
+
           <p>
             <span className="font-medium">Category:</span>{" "}
             {pet.category || "N/A"}
@@ -113,7 +130,7 @@ export default function PetDetails() {
             >
               SOLD
             </button>
-          ) : pet.status === "pending" ? (
+          ) : alreadyRequested ? (
             <button
               disabled
               className="w-full bg-yellow-500 text-white py-3 rounded-lg font-semibold cursor-not-allowed"

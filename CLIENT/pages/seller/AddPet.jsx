@@ -17,7 +17,7 @@ export default function AddPet() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
+  const [messageType, setMessageType] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,32 +45,41 @@ export default function AddPet() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setMessage("");
+
     if (images.length === 0) {
       setMessage("Upload at least one image");
+      setMessageType("error");
       return;
     }
 
     try {
       setLoading(true);
-      setMessage("");
 
       const token = localStorage.getItem("token");
 
       const formData = new FormData();
 
-      for (let key in form) {
+      Object.keys(form).forEach((key) => {
         formData.append(key, form[key]);
-      }
+      });
 
       images.forEach((img) => {
         formData.append("images", img);
       });
 
-      await axios.post("http://localhost:5000/seller/addpet", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.post(
+        "http://localhost:5000/seller/addpet",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      setMessage("Pet added successfully ✅");
+      setMessage(res.data.message);
+      setMessageType("success");
 
       setForm({
         name: "",
@@ -85,8 +94,9 @@ export default function AddPet() {
 
       setImages([]);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || "Failed to add pet");
+      setMessage(err.response?.data?.message || "Something went wrong");
+
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
@@ -106,7 +116,6 @@ export default function AddPet() {
             onChange={handleChange}
             placeholder="Pet Name"
             className="input"
-            required
           />
 
           <input
@@ -115,7 +124,6 @@ export default function AddPet() {
             onChange={handleChange}
             placeholder="Breed"
             className="input"
-            required
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -127,7 +135,6 @@ export default function AddPet() {
               onChange={handleChange}
               placeholder="Age"
               className="input"
-              required
             />
 
             <input
@@ -138,7 +145,6 @@ export default function AddPet() {
               onChange={handleChange}
               placeholder="Price"
               className="input"
-              required
             />
           </div>
 
@@ -158,7 +164,6 @@ export default function AddPet() {
               value={form.category}
               onChange={handleChange}
               className="input"
-              required
             >
               <option value="">Category</option>
               <option value="dog">Dog</option>
@@ -174,7 +179,6 @@ export default function AddPet() {
             onChange={handleChange}
             placeholder="Location"
             className="input"
-            required
           />
 
           <textarea
@@ -214,7 +218,6 @@ export default function AddPet() {
                 setImages(valid);
               }}
               className="text-xs"
-              required
             />
 
             {images.length > 0 && (
