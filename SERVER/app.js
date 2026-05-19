@@ -19,7 +19,7 @@ app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://pet-lizo-85cystbuo-abms09s-projects.vercel.app",
+   "https://pet-lizo.vercel.app",
 ];
 
 app.use(
