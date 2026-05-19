@@ -3,7 +3,7 @@ import { PawPrint, Heart, ShieldCheck } from "lucide-react";
 import axios from "axios";
 import { useRef, useEffect } from "react";
 import { toast } from "react-toastify";
-import HomeImg from "../../src/assets/Home.webp";
+import HomeImg from "../../src/assets/home.webp"
 
 export default function Home() {
   const navigate = useNavigate();
